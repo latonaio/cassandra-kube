@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: cassandra
+  name: cassandra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: cassandra
+  strategy:
+    rollingUpdate:
+  template:
+    metadata:
+      labels:
+        run: cassandra
+    spec:
+      hostname: cassandra
+      containers:
+      - name: cassandra
+        tty: true
+        image: cassandra:4.0.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9042
+        volumeMounts:
+        - name: cassandra-data
+          mountPath: /var/lib/cassandra
+      volumes:
+      - name: cassandra-data
+        hostPath:
+          path: /var/lib/aion/default/Data/cassandra
+      # env:
+      # - name: JVM_ARGS
+      #   value: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: cassandra
+  name: cassandra
+spec:
+  selector:
+    run: cassandra
+  type: NodePort
+  ports:
+  - name: cassandra-node
+    port: 9042
+    protocol: TCP
+    targetPort: 9042
+    nodePort: 32100
+  - name: cassandra-mgmt
+    port: 9160
+    protocol: TCP
+    targetPort: 9160
+    nodePort: 32101
